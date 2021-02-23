@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const projects = [];
+let projects = [];
 
 function validateProjectId(req, res, next) {
   const { id } = req.params;
@@ -26,7 +26,7 @@ app.get("/projects", (req, res) => {
 });
 
 app.post("/projects", (req, res) => {
-  const { hourIn, minIn, hourOut, minOut } = req.body;
+  const { hourIn, minIn, hourOut, minOut, del } = req.body;
 
   let valueHourIn = parseInt(hourIn);
   let valueMinIn = parseInt(minIn);
@@ -189,8 +189,15 @@ app.post("/projects", (req, res) => {
 
   projects.push(project);
 
+  if(del === true) {
+  
+    projects = [];
+   }
+
   return res.json(project);
 });
+
+
 
 app.listen(3333, () => {
   console.log("✈ Back-end started");

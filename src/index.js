@@ -32,7 +32,7 @@ app.post("/projects", (req, res) => {
   let valueMinIn = parseInt(minIn);
   let valueHourOut = parseInt(hourOut);
   let valueMinOut = parseInt(minOut);
-  if  (valueHourOut == 00) valueHourOut = 24;
+  if (valueHourOut == 00) valueHourOut = 24;
   let valueHourDiurno = 0;
   let valueMinDiurno = 0;
   let valueHourNoturno = 0;
@@ -45,7 +45,7 @@ app.post("/projects", (req, res) => {
   // se entrada for diurna
   if (valueHourIn >= 5 && valueHourIn < 22) {
     //executa se saida é menor que 22hs
-    if (valueHourOut >= 5 && valueHourOut < 22) {
+    if (valueHourOut >= 5 && valueHourOut < 22 && valueHourOut > valueHourIn) {
       //executa se minOut for < minIn
       if (valueMinOut < valueMinIn) {
         valueMinOut += 60;
@@ -62,10 +62,19 @@ app.post("/projects", (req, res) => {
 
       //executa se saida é maior ou igual a 22hs
     } else {
-      //resultado para hora diurna
-      valueMinDiurno = 59 - valueMinIn;
-      valueHourDiurno = 21 - valueHourIn;
-      DiurnoResult = "de horas diurnas";
+      //resultado para hora diurna até as 22hrs
+      if (valueMinIn == 0) {
+        valueMinDiurno = 00 - valueMinIn;
+        valueHourDiurno = 22 - valueHourIn;
+        DiurnoResult = "de horas diurnas";
+      } else {
+        valueMinIn -= 60;
+        valueHourIn += 1;
+
+        valueMinDiurno = 00 - valueMinIn;
+        valueHourDiurno = 22 - valueHourIn;
+        DiurnoResult = "de horas diurnas";
+      }
 
       //executa quando hora de saida for entre 22hrs e 24hrs
       if (valueHourOut >= 22 && valueHourOut < 24) {
@@ -73,39 +82,100 @@ app.post("/projects", (req, res) => {
         valueMinNoturno = valueMinOut - 0;
         valueHourNoturno = valueHourOut - 22;
         NoturnoResult = "de horas noturnas";
-      }else{
-        
-        if  (valueHourOut == 24) valueHourOut = 00;
+      } else {
+        if (valueHourOut == 24) valueHourOut = 00;
         //se horario de saida passou das 00hr
-        if(valueHourOut < 5){
-
+        if (valueHourOut < 5) {
           valueMinNoturno = valueMinOut;
           valueHourNoturno = valueHourOut + 2;
           NoturnoResult = "de horas noturnas";
+        } else {
+          // calcular horas após as 5hs
+          valueHourOut -= 5;
 
+          valueMinDiurno += valueMinOut;
+          valueHourDiurno += valueHourOut;
+
+          if (valueMinDiurno >= 60) {
+            valueMinDiurno -= 60;
+            valueHourDiurno += 1;
+
+          }
+
+          valueMinNoturno = 00;
+          valueHourNoturno = 07;
+          NoturnoResult = "de horas noturnas";
         }
+      }
+    }
+  }
+
+  // ***************************** Se entrada for noturna *****************************
+  if (valueHourIn >= 22 || valueHourIn < 5) {
+    if (valueHourOut >= 22 && valueHourOut <= 24) {
+      if (valueMinIn > valueMinOut) {
+        valueMinOut += 60;
+        valueHourOut -= 1;
+
+        valueMinNoturno = valueMinOut - valueMinIn;
+        valueHourNoturno = valueHourOut - valueHourIn;
+        NoturnoResult = "de horas noturnas";
+      } else {
+        valueMinNoturno = valueMinOut - valueMinIn;
+        valueHourNoturno = valueHourOut - valueHourIn;
+        NoturnoResult = "de horas noturnas";
+        //console.log("Passei aqui");
+      }
+    } else {
+      //*********************Teste *****************
+
+      if (valueHourOut == 24) valueHourOut = 00;
+
+      if (valueMinIn == 0) {
+        valueMinNoturno = 00 - valueMinIn;
+        valueHourNoturno = 24 - valueHourIn;
+      } else {
+        valueMinIn -= 60;
+        valueHourIn += 1;
+
+        valueMinNoturno = 00 - valueMinIn;
+        valueHourNoturno = 24 - valueHourIn;
+      }
+
+      // se caso entrada for entre 22hrs 00 e saida entre 00hr e 5hrs  
+      if (valueHourIn >= 22 && valueHourOut > 00  && valueHourOut <= 5) {
 
 
+        // somando horas entre 22hrs 00 e saida entre 00hr e 5hrs
+        valueMinNoturno += valueMinOut
+        valueHourNoturno += valueHourOut
+
+        if(valueMinNoturno >= 60){
+          valueMinNoturno -= 60
+          valueHourNoturno += 1
+        }
+        NoturnoResult = "de horas noturnas";
+
+
+      } else {
+        // calcular horas após as 5hs
+        valueHourNoturno += 5
+
+        valueHourOut -= 5;
+
+        valueMinDiurno += valueMinOut;
+        valueHourDiurno += valueHourOut;
+
+        if (valueMinDiurno >= 60) {
+          valueMinDiurno -= 60;
+          valueHourDiurno += 1;
+        }
+        NoturnoResult = "de horas noturnas";
+        DiurnoResult = "de horas diurnas";
 
       }
     }
-
-
-
   }
-
-  // se entrada for noturna
-  if (valueHourIn >= 22 || valueHourIn < 5) {
-  }
-
-  // let valueSumMin = parseInt(minIn) - parseInt(minOut)
-  // let valueSumHour = parseInt(hourOut) - parseInt(hourIn)
-
-  // if (valueSumMin >= 60){
-  //   valueSumMin = valueSumMin - 60
-  //   valueSumHour = valueSumHour + 1
-
-  // }
 
   const project = {
     id: uuid(),
